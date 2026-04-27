@@ -1045,12 +1045,12 @@ func TestPRHandler_Execute_ViewWithPRNumber(t *testing.T) {
 func TestIssueHandler_Execute_CreateWithOptions(t *testing.T) {
 	// Skip in short mode to avoid long timeouts
 	if testing.Short() {
-		t.Skip("Skipping in short mode")
+		t.Skip("Skipping in short mode")  // SKIP-OK: #short-mode
 	}
 
 	// Skip this test if gh CLI is available to avoid creating real issues
 	if _, err := exec.LookPath("gh"); err == nil {
-		t.Skip("Skipping test: gh CLI is available and would create real issues")
+		t.Skip("Skipping test: gh CLI is available and would create real issues")  // SKIP-OK: #legacy-untriaged
 	}
 
 	handler := &IssueHandler{}
@@ -1070,12 +1070,12 @@ func TestIssueHandler_Execute_CreateWithOptions(t *testing.T) {
 func TestWorkflowHandler_Execute_RunWithOptions(t *testing.T) {
 	// Skip in short mode to avoid long timeouts
 	if testing.Short() {
-		t.Skip("Skipping in short mode")
+		t.Skip("Skipping in short mode")  // SKIP-OK: #short-mode
 	}
 
 	// Skip this test if gh CLI is available to avoid running real workflows
 	if _, err := exec.LookPath("gh"); err == nil {
-		t.Skip("Skipping test: gh CLI is available and would run real workflows")
+		t.Skip("Skipping test: gh CLI is available and would run real workflows")  // SKIP-OK: #legacy-untriaged
 	}
 
 	handler := &WorkflowHandler{}
