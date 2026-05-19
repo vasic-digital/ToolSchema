@@ -1,0 +1,81 @@
+# ToolSchema i18n bundle — active English (en) locale.
+#
+# Every entry maps a CONST-046-migrated hardcoded literal in
+# digital.vasic.toolschema to a message ID resolved at runtime via
+# Translator.T. The consuming project wires a real Translator at
+# boot; the in-package NoopTranslator echoes the message ID verbatim
+# for unit tests + backward compat.
+#
+# Naming convention: toolschema_<area>_<short_description>.
+# All IDs prefixed with toolschema_ to avoid namespace collision
+# with other packages' bundles when loaded into the same go-i18n
+# Bundle.
+#
+# Round-322 §11.4 anti-bluff sweep (2026-05-20): migrated 22 of the
+# most user-facing runtime literals in handler.go — 11 error
+# messages surfaced in ToolResult.Error (unknown tool, invalid file
+# path, invalid git operation, invalid working directory, dangerous
+# characters, invalid git reference, invalid path, invalid symbol,
+# unsupported linter) and 11 operation-description strings emitted
+# by the GenerateDefaultArgs paths of GitHandler / RunTestsHandler /
+# RunLintHandler (the human-readable text an agent sees in proposed
+# tool arguments). Static var-init literals in the
+# ToolSchemaRegistry (schema.go) are JSON-schema-adjacent
+# descriptions deferred to a future round to stay under the size
+# cap.
+
+toolschema_err_unknown_tool:
+  other: "unknown tool: {{.Tool}}"
+toolschema_err_invalid_file_path:
+  other: "invalid file path: {{.Path}}"
+toolschema_err_invalid_path:
+  other: "invalid path: {{.Path}}"
+toolschema_err_invalid_git_operation:
+  other: "invalid git operation: {{.Operation}}"
+toolschema_err_invalid_working_dir:
+  other: "invalid working directory path: {{.Path}}"
+toolschema_err_dangerous_arg:
+  other: "invalid argument contains dangerous characters: {{.Arg}}"
+toolschema_err_invalid_git_reference:
+  other: "invalid git reference: {{.Reference}}"
+toolschema_err_invalid_symbol:
+  other: "invalid symbol: {{.Symbol}}"
+toolschema_err_unsupported_linter:
+  other: "unsupported linter: {{.Linter}}"
+toolschema_err_dangerous_ignore_pattern:
+  other: "invalid ignore pattern contains dangerous characters: {{.Pattern}}"
+
+toolschema_git_desc_status:
+  other: "Check git status"
+toolschema_git_desc_commit:
+  other: "Create git commit"
+toolschema_git_desc_push:
+  other: "Push changes to remote"
+toolschema_git_desc_pull:
+  other: "Pull changes from remote"
+toolschema_git_desc_branch:
+  other: "List or create branches"
+toolschema_git_desc_checkout:
+  other: "Checkout branch or file"
+toolschema_git_desc_merge:
+  other: "Merge branches"
+toolschema_git_desc_diff:
+  other: "Show differences"
+toolschema_git_desc_log:
+  other: "Show commit history"
+toolschema_git_desc_stash:
+  other: "Stash changes"
+
+toolschema_test_desc_default:
+  other: "Run tests"
+toolschema_test_desc_coverage:
+  other: "Run tests with coverage"
+toolschema_test_desc_unit:
+  other: "Run unit tests"
+toolschema_test_desc_integration:
+  other: "Run integration tests"
+toolschema_test_desc_e2e:
+  other: "Run end-to-end tests"
+
+toolschema_lint_desc_default:
+  other: "Run code linting"

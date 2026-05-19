@@ -57,7 +57,8 @@ func (r *ToolRegistry) Get(name string) (ToolHandler, bool) {
 func (r *ToolRegistry) Execute(ctx context.Context, toolName string, args map[string]interface{}) (ToolResult, error) {
 	handler, ok := r.Get(toolName)
 	if !ok {
-		return ToolResult{Success: false, Error: fmt.Sprintf("unknown tool: %s", toolName)}, fmt.Errorf("unknown tool: %s", toolName)
+		msg := tr("toolschema_err_unknown_tool", map[string]any{"Tool": toolName})
+		return ToolResult{Success: false, Error: msg}, fmt.Errorf("unknown tool: %s", toolName)
 	}
 
 	if err := handler.ValidateArgs(args); err != nil {
@@ -145,7 +146,7 @@ func (h *ReadFileHandler) Execute(ctx context.Context, args map[string]interface
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid file path: %s", filePath),
+			Error:   errInvalidFilePath(filePath),
 		}, nil
 	}
 
@@ -226,35 +227,35 @@ func (h *GitHandler) GenerateDefaultArgs(context string) map[string]interface{} 
 
 	// Detect operation from context
 	operation := "status"
-	description := "Check git status"
+	description := tr("toolschema_git_desc_status", nil)
 
 	if strings.Contains(contextLower, "commit") {
 		operation = "commit"
-		description = "Create git commit"
+		description = tr("toolschema_git_desc_commit", nil)
 	} else if strings.Contains(contextLower, "push") {
 		operation = "push"
-		description = "Push changes to remote"
+		description = tr("toolschema_git_desc_push", nil)
 	} else if strings.Contains(contextLower, "pull") {
 		operation = "pull"
-		description = "Pull changes from remote"
+		description = tr("toolschema_git_desc_pull", nil)
 	} else if strings.Contains(contextLower, "branch") {
 		operation = "branch"
-		description = "List or create branches"
+		description = tr("toolschema_git_desc_branch", nil)
 	} else if strings.Contains(contextLower, "checkout") {
 		operation = "checkout"
-		description = "Checkout branch or file"
+		description = tr("toolschema_git_desc_checkout", nil)
 	} else if strings.Contains(contextLower, "merge") {
 		operation = "merge"
-		description = "Merge branches"
+		description = tr("toolschema_git_desc_merge", nil)
 	} else if strings.Contains(contextLower, "diff") {
 		operation = "diff"
-		description = "Show differences"
+		description = tr("toolschema_git_desc_diff", nil)
 	} else if strings.Contains(contextLower, "log") {
 		operation = "log"
-		description = "Show commit history"
+		description = tr("toolschema_git_desc_log", nil)
 	} else if strings.Contains(contextLower, "stash") {
 		operation = "stash"
-		description = "Stash changes"
+		description = tr("toolschema_git_desc_stash", nil)
 	}
 
 	return map[string]interface{}{
@@ -285,7 +286,7 @@ func (h *GitHandler) Execute(ctx context.Context, args map[string]interface{}) (
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid git operation: %s", operation),
+			Error:   tr("toolschema_err_invalid_git_operation", map[string]any{"Operation": operation}),
 		}, nil
 	}
 
@@ -297,7 +298,7 @@ func (h *GitHandler) Execute(ctx context.Context, args map[string]interface{}) (
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid working directory path: %s", workingDir),
+			Error:   tr("toolschema_err_invalid_working_dir", map[string]any{"Path": workingDir}),
 		}, nil
 	}
 
@@ -309,7 +310,7 @@ func (h *GitHandler) Execute(ctx context.Context, args map[string]interface{}) (
 				return ToolResult{
 					Success: false,
 					Output:  "",
-					Error:   fmt.Sprintf("invalid argument contains dangerous characters: %s", s),
+					Error:   tr("toolschema_err_dangerous_arg", map[string]any{"Arg": s}),
 				}, nil
 			}
 			cmdArgs = append(cmdArgs, s)
@@ -376,24 +377,24 @@ func (h *TestHandler) GenerateDefaultArgs(context string) map[string]interface{}
 	testPath := "./..."
 	testType := "all"
 	coverage := false
-	description := "Run tests"
+	description := tr("toolschema_test_desc_default", nil)
 
 	if strings.Contains(contextLower, "coverage") {
 		coverage = true
-		description = "Run tests with coverage"
+		description = tr("toolschema_test_desc_coverage", nil)
 	}
 	if strings.Contains(contextLower, "unit") {
 		testType = "unit"
 		testPath = "./internal/..."
-		description = "Run unit tests"
+		description = tr("toolschema_test_desc_unit", nil)
 	} else if strings.Contains(contextLower, "integration") {
 		testType = "integration"
 		testPath = "./tests/integration/..."
-		description = "Run integration tests"
+		description = tr("toolschema_test_desc_integration", nil)
 	} else if strings.Contains(contextLower, "e2e") {
 		testType = "e2e"
 		testPath = "./tests/e2e/..."
-		description = "Run end-to-end tests"
+		description = tr("toolschema_test_desc_e2e", nil)
 	}
 
 	return map[string]interface{}{
@@ -501,7 +502,7 @@ func (h *LintHandler) GenerateDefaultArgs(context string) map[string]interface{}
 		"path":        "./...",
 		"linter":      "auto",
 		"auto_fix":    false,
-		"description": "Run code linting",
+		"description": tr("toolschema_lint_desc_default", nil),
 	}
 }
 
@@ -525,7 +526,7 @@ func (h *LintHandler) Execute(ctx context.Context, args map[string]interface{}) 
 			return ToolResult{
 				Success: false,
 				Output:  "",
-				Error:   fmt.Sprintf("invalid path: %s", path),
+				Error:   errInvalidPath(path),
 			}, nil
 		}
 	}
@@ -561,7 +562,7 @@ func (h *LintHandler) Execute(ctx context.Context, args map[string]interface{}) 
 	default:
 		return ToolResult{
 			Success: false,
-			Error:   fmt.Sprintf("unsupported linter: %s", linter),
+			Error:   tr("toolschema_err_unsupported_linter", map[string]any{"Linter": linter}),
 		}, nil
 	}
 
@@ -630,14 +631,14 @@ func (h *DiffHandler) Execute(ctx context.Context, args map[string]interface{}) 
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid file path: %s", filePath),
+			Error:   errInvalidFilePath(filePath),
 		}, nil
 	}
 	if compareWith != "" && !ValidateGitRef(compareWith) {
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid git reference: %s", compareWith),
+			Error:   tr("toolschema_err_invalid_git_reference", map[string]any{"Reference": compareWith}),
 		}, nil
 	}
 
@@ -754,7 +755,7 @@ func (h *TreeViewHandler) Execute(ctx context.Context, args map[string]interface
 				return ToolResult{
 					Success: false,
 					Output:  "",
-					Error:   fmt.Sprintf("invalid ignore pattern contains dangerous characters: %s", p),
+					Error:   tr("toolschema_err_dangerous_ignore_pattern", map[string]any{"Pattern": p}),
 				}, nil
 			}
 		}
@@ -947,7 +948,7 @@ func (h *SymbolsHandler) Execute(ctx context.Context, args map[string]interface{
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid file path: %s", filePath),
+			Error:   errInvalidFilePath(filePath),
 		}, nil
 	}
 
@@ -1026,7 +1027,7 @@ func (h *ReferencesHandler) Execute(ctx context.Context, args map[string]interfa
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid symbol: %s", symbol),
+			Error:   errInvalidSymbol(symbol),
 		}, nil
 	}
 	// Validate file path if provided
@@ -1034,7 +1035,7 @@ func (h *ReferencesHandler) Execute(ctx context.Context, args map[string]interfa
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid file path: %s", filePath),
+			Error:   errInvalidFilePath(filePath),
 		}, nil
 	}
 
@@ -1108,7 +1109,7 @@ func (h *DefinitionHandler) Execute(ctx context.Context, args map[string]interfa
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid symbol: %s", symbol),
+			Error:   errInvalidSymbol(symbol),
 		}, nil
 	}
 

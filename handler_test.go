@@ -59,6 +59,12 @@ func TestToolRegistry_Get_CaseInsensitive(t *testing.T) {
 }
 
 func TestToolRegistry_Execute_UnknownTool(t *testing.T) {
+	// Wire the bundle-backed English translator so result.Error
+	// carries the real user-facing string (CONST-046: the literal
+	// is no longer hardcoded — it is resolved at runtime).
+	SetTranslator(enBundleTranslator())
+	defer SetTranslator(nil)
+
 	registry := NewToolRegistry()
 	ctx := context.Background()
 
@@ -746,6 +752,9 @@ func TestWorkflowHandler_Execute_UnknownAction(t *testing.T) {
 }
 
 func TestLintHandler_Execute_UnsupportedLinter(t *testing.T) {
+	SetTranslator(enBundleTranslator())
+	defer SetTranslator(nil)
+
 	handler := &LintHandler{}
 	ctx := context.Background()
 
