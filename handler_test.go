@@ -668,6 +668,8 @@ func TestPRHandler_Execute_CloseWithoutPRNumber(t *testing.T) {
 }
 
 func TestPRHandler_Execute_UnknownAction(t *testing.T) {
+	SetTranslator(enBundleTranslator())
+	defer SetTranslator(nil)
 	handler := &PRHandler{}
 	ctx := context.Background()
 
@@ -704,6 +706,8 @@ func TestIssueHandler_Execute_CloseWithoutIssueNumber(t *testing.T) {
 }
 
 func TestIssueHandler_Execute_UnknownAction(t *testing.T) {
+	SetTranslator(enBundleTranslator())
+	defer SetTranslator(nil)
 	handler := &IssueHandler{}
 	ctx := context.Background()
 
@@ -740,6 +744,8 @@ func TestWorkflowHandler_Execute_LogsWithoutRunID(t *testing.T) {
 }
 
 func TestWorkflowHandler_Execute_UnknownAction(t *testing.T) {
+	SetTranslator(enBundleTranslator())
+	defer SetTranslator(nil)
 	handler := &WorkflowHandler{}
 	ctx := context.Background()
 

@@ -79,3 +79,52 @@ toolschema_test_desc_e2e:
 
 toolschema_lint_desc_default:
   other: "Run code linting"
+
+# Round-371 §11.4 anti-bluff residual sweep (2026-05-20): migrated 19
+# further user-facing literals in handler.go — 10 tool / operation
+# descriptions surfaced in GenerateDefaultArgs (ReadFile, git Diff,
+# TreeView, FileInfo, Symbols, References, Definition, PR list/create/
+# merge/view, Issue list, Workflow list) and 6 error messages surfaced
+# in ToolResult.Error from the PR / Issue / Workflow gh-CLI handlers
+# (unknown action, dangerous title, dangerous body, invalid base
+# branch, dangerous workflow ID, invalid branch).
+toolschema_desc_read_file:
+  other: "Read file contents"
+toolschema_desc_git_diff:
+  other: "Show git diff"
+toolschema_desc_tree_view:
+  other: "Display directory tree"
+toolschema_desc_file_info:
+  other: "Get file information"
+toolschema_desc_extract_symbols:
+  other: "Extract code symbols"
+toolschema_desc_find_references:
+  other: "Find symbol references"
+toolschema_desc_find_definition:
+  other: "Find symbol definition"
+toolschema_desc_list_issues:
+  other: "List issues"
+toolschema_desc_list_workflows:
+  other: "List workflows"
+
+toolschema_pr_desc_list:
+  other: "List pull requests"
+toolschema_pr_desc_create:
+  other: "Create pull request"
+toolschema_pr_desc_merge:
+  other: "Merge pull request"
+toolschema_pr_desc_view:
+  other: "View pull request"
+
+toolschema_err_unknown_action:
+  other: "unknown action: {{.Action}}"
+toolschema_err_dangerous_title:
+  other: "invalid title contains dangerous characters: {{.Title}}"
+toolschema_err_dangerous_body:
+  other: "invalid body contains dangerous characters: {{.Body}}"
+toolschema_err_invalid_base_branch:
+  other: "invalid base branch: {{.Branch}}"
+toolschema_err_dangerous_workflow_id:
+  other: "invalid workflow ID contains dangerous characters: {{.WorkflowID}}"
+toolschema_err_invalid_branch:
+  other: "invalid branch: {{.Branch}}"

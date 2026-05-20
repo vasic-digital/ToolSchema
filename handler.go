@@ -125,7 +125,7 @@ func (h *ReadFileHandler) GenerateDefaultArgs(context string) map[string]interfa
 		"file_path":   "README.md",
 		"offset":      0,
 		"limit":       2000,
-		"description": "Read file contents",
+		"description": tr("toolschema_desc_read_file", nil),
 	}
 }
 
@@ -616,7 +616,7 @@ func (h *DiffHandler) ValidateArgs(args map[string]interface{}) error {
 func (h *DiffHandler) GenerateDefaultArgs(context string) map[string]interface{} {
 	return map[string]interface{}{
 		"mode":        "working",
-		"description": "Show git diff",
+		"description": tr("toolschema_desc_git_diff", nil),
 	}
 }
 
@@ -719,7 +719,7 @@ func (h *TreeViewHandler) GenerateDefaultArgs(context string) map[string]interfa
 		"path":        ".",
 		"max_depth":   3,
 		"show_hidden": false,
-		"description": "Display directory tree",
+		"description": tr("toolschema_desc_tree_view", nil),
 	}
 }
 
@@ -746,7 +746,7 @@ func (h *TreeViewHandler) Execute(ctx context.Context, args map[string]interface
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid path: %s", path),
+			Error:   errInvalidPath(path),
 		}, nil
 	}
 	for _, pattern := range ignorePatterns {
@@ -845,7 +845,7 @@ func (h *FileInfoHandler) GenerateDefaultArgs(context string) map[string]interfa
 		"file_path":     "README.md",
 		"include_stats": true,
 		"include_git":   false,
-		"description":   "Get file information",
+		"description":   tr("toolschema_desc_file_info", nil),
 	}
 }
 
@@ -933,7 +933,7 @@ func (h *SymbolsHandler) GenerateDefaultArgs(context string) map[string]interfac
 	return map[string]interface{}{
 		"file_path":   ".",
 		"recursive":   false,
-		"description": "Extract code symbols",
+		"description": tr("toolschema_desc_extract_symbols", nil),
 	}
 }
 
@@ -1006,7 +1006,7 @@ func (h *ReferencesHandler) GenerateDefaultArgs(context string) map[string]inter
 	return map[string]interface{}{
 		"symbol":              "main",
 		"include_declaration": true,
-		"description":         "Find symbol references",
+		"description":         tr("toolschema_desc_find_references", nil),
 	}
 }
 
@@ -1090,7 +1090,7 @@ func (h *DefinitionHandler) ValidateArgs(args map[string]interface{}) error {
 func (h *DefinitionHandler) GenerateDefaultArgs(context string) map[string]interface{} {
 	return map[string]interface{}{
 		"symbol":      "main",
-		"description": "Find symbol definition",
+		"description": tr("toolschema_desc_find_definition", nil),
 	}
 }
 
@@ -1166,17 +1166,17 @@ func (h *PRHandler) GenerateDefaultArgs(context string) map[string]interface{} {
 	contextLower := strings.ToLower(context)
 
 	action := "list"
-	description := "List pull requests"
+	description := tr("toolschema_pr_desc_list", nil)
 
 	if strings.Contains(contextLower, "create") {
 		action = "create"
-		description = "Create pull request"
+		description = tr("toolschema_pr_desc_create", nil)
 	} else if strings.Contains(contextLower, "merge") {
 		action = "merge"
-		description = "Merge pull request"
+		description = tr("toolschema_pr_desc_merge", nil)
 	} else if strings.Contains(contextLower, "view") {
 		action = "view"
-		description = "View pull request"
+		description = tr("toolschema_pr_desc_view", nil)
 	}
 
 	return map[string]interface{}{
@@ -1210,7 +1210,7 @@ func (h *PRHandler) Execute(ctx context.Context, args map[string]interface{}) (T
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("unknown action: %s", action),
+			Error:   errUnknownAction(action),
 		}, nil
 	}
 	// Validate inputs
@@ -1218,21 +1218,21 @@ func (h *PRHandler) Execute(ctx context.Context, args map[string]interface{}) (T
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid title contains dangerous characters: %s", title),
+			Error:   errDangerousTitle(title),
 		}, nil
 	}
 	if body != "" && !ValidateCommandArg(body) {
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid body contains dangerous characters: %s", body),
+			Error:   errDangerousBody(body),
 		}, nil
 	}
 	if baseBranch != "" && !ValidateGitRef(baseBranch) {
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid base branch: %s", baseBranch),
+			Error:   errInvalidBaseBranch(baseBranch),
 		}, nil
 	}
 
@@ -1279,7 +1279,7 @@ func (h *PRHandler) Execute(ctx context.Context, args map[string]interface{}) (T
 			return ToolResult{Success: false, Error: "pr_number required for close"}, nil
 		}
 	default:
-		return ToolResult{Success: false, Error: fmt.Sprintf("unknown action: %s", action)}, nil
+		return ToolResult{Success: false, Error: errUnknownAction(action)}, nil
 	}
 
 	output, err := cmd.CombinedOutput()
@@ -1336,7 +1336,7 @@ func (h *IssueHandler) ValidateArgs(args map[string]interface{}) error {
 func (h *IssueHandler) GenerateDefaultArgs(context string) map[string]interface{} {
 	return map[string]interface{}{
 		"action":      "list",
-		"description": "List issues",
+		"description": tr("toolschema_desc_list_issues", nil),
 	}
 }
 
@@ -1363,7 +1363,7 @@ func (h *IssueHandler) Execute(ctx context.Context, args map[string]interface{})
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("unknown action: %s", action),
+			Error:   errUnknownAction(action),
 		}, nil
 	}
 	// Validate inputs
@@ -1371,14 +1371,14 @@ func (h *IssueHandler) Execute(ctx context.Context, args map[string]interface{})
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid title contains dangerous characters: %s", title),
+			Error:   errDangerousTitle(title),
 		}, nil
 	}
 	if body != "" && !ValidateCommandArg(body) {
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid body contains dangerous characters: %s", body),
+			Error:   errDangerousBody(body),
 		}, nil
 	}
 
@@ -1412,7 +1412,7 @@ func (h *IssueHandler) Execute(ctx context.Context, args map[string]interface{})
 			return ToolResult{Success: false, Error: "issue_number required"}, nil
 		}
 	default:
-		return ToolResult{Success: false, Error: fmt.Sprintf("unknown action: %s", action)}, nil
+		return ToolResult{Success: false, Error: errUnknownAction(action)}, nil
 	}
 
 	output, err := cmd.CombinedOutput()
@@ -1469,7 +1469,7 @@ func (h *WorkflowHandler) ValidateArgs(args map[string]interface{}) error {
 func (h *WorkflowHandler) GenerateDefaultArgs(context string) map[string]interface{} {
 	return map[string]interface{}{
 		"action":      "list",
-		"description": "List workflows",
+		"description": tr("toolschema_desc_list_workflows", nil),
 	}
 }
 
@@ -1496,7 +1496,7 @@ func (h *WorkflowHandler) Execute(ctx context.Context, args map[string]interface
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("unknown action: %s", action),
+			Error:   errUnknownAction(action),
 		}, nil
 	}
 	// Validate inputs
@@ -1504,14 +1504,14 @@ func (h *WorkflowHandler) Execute(ctx context.Context, args map[string]interface
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid workflow ID contains dangerous characters: %s", workflowID),
+			Error:   errDangerousWorkflowID(workflowID),
 		}, nil
 	}
 	if branch != "" && !ValidateGitRef(branch) {
 		return ToolResult{
 			Success: false,
 			Output:  "",
-			Error:   fmt.Sprintf("invalid branch: %s", branch),
+			Error:   errInvalidBranch(branch),
 		}, nil
 	}
 
@@ -1553,7 +1553,7 @@ func (h *WorkflowHandler) Execute(ctx context.Context, args map[string]interface
 			return ToolResult{Success: false, Error: "run_id required for logs"}, nil
 		}
 	default:
-		return ToolResult{Success: false, Error: fmt.Sprintf("unknown action: %s", action)}, nil
+		return ToolResult{Success: false, Error: errUnknownAction(action)}, nil
 	}
 
 	output, err := cmd.CombinedOutput()

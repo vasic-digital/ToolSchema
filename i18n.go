@@ -83,3 +83,40 @@ func errInvalidPath(path string) string {
 func errInvalidSymbol(symbol string) string {
 	return tr("toolschema_err_invalid_symbol", map[string]any{"Symbol": symbol})
 }
+
+// errUnknownAction produces the locale-resolved "unknown action"
+// error message. Shared by the PR / Issue / Workflow handlers when an
+// agent requests an action outside their allowed-action set.
+func errUnknownAction(action string) string {
+	return tr("toolschema_err_unknown_action", map[string]any{"Action": action})
+}
+
+// errDangerousTitle produces the locale-resolved error for a PR /
+// Issue title containing shell-unsafe characters.
+func errDangerousTitle(title string) string {
+	return tr("toolschema_err_dangerous_title", map[string]any{"Title": title})
+}
+
+// errDangerousBody produces the locale-resolved error for a PR /
+// Issue body containing shell-unsafe characters.
+func errDangerousBody(body string) string {
+	return tr("toolschema_err_dangerous_body", map[string]any{"Body": body})
+}
+
+// errInvalidBaseBranch produces the locale-resolved error for an
+// invalid base-branch git reference passed to the PR handler.
+func errInvalidBaseBranch(branch string) string {
+	return tr("toolschema_err_invalid_base_branch", map[string]any{"Branch": branch})
+}
+
+// errDangerousWorkflowID produces the locale-resolved error for a
+// workflow ID containing shell-unsafe characters.
+func errDangerousWorkflowID(id string) string {
+	return tr("toolschema_err_dangerous_workflow_id", map[string]any{"WorkflowID": id})
+}
+
+// errInvalidBranch produces the locale-resolved error for an invalid
+// branch git reference passed to the Workflow handler.
+func errInvalidBranch(branch string) string {
+	return tr("toolschema_err_invalid_branch", map[string]any{"Branch": branch})
+}

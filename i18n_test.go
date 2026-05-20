@@ -100,6 +100,26 @@ func TestI18n_EnBundle_ResolvesEveryMigratedID(t *testing.T) {
 		{"toolschema_test_desc_integration", nil, "Run integration tests"},
 		{"toolschema_test_desc_e2e", nil, "Run end-to-end tests"},
 		{"toolschema_lint_desc_default", nil, "Run code linting"},
+		// Round-371 residual sweep.
+		{"toolschema_desc_read_file", nil, "Read file contents"},
+		{"toolschema_desc_git_diff", nil, "Show git diff"},
+		{"toolschema_desc_tree_view", nil, "Display directory tree"},
+		{"toolschema_desc_file_info", nil, "Get file information"},
+		{"toolschema_desc_extract_symbols", nil, "Extract code symbols"},
+		{"toolschema_desc_find_references", nil, "Find symbol references"},
+		{"toolschema_desc_find_definition", nil, "Find symbol definition"},
+		{"toolschema_desc_list_issues", nil, "List issues"},
+		{"toolschema_desc_list_workflows", nil, "List workflows"},
+		{"toolschema_pr_desc_list", nil, "List pull requests"},
+		{"toolschema_pr_desc_create", nil, "Create pull request"},
+		{"toolschema_pr_desc_merge", nil, "Merge pull request"},
+		{"toolschema_pr_desc_view", nil, "View pull request"},
+		{"toolschema_err_unknown_action", map[string]any{"Action": "frob"}, "unknown action: frob"},
+		{"toolschema_err_dangerous_title", map[string]any{"Title": "x;y"}, "invalid title contains dangerous characters: x;y"},
+		{"toolschema_err_dangerous_body", map[string]any{"Body": "x;y"}, "invalid body contains dangerous characters: x;y"},
+		{"toolschema_err_invalid_base_branch", map[string]any{"Branch": "b"}, "invalid base branch: b"},
+		{"toolschema_err_dangerous_workflow_id", map[string]any{"WorkflowID": "w;y"}, "invalid workflow ID contains dangerous characters: w;y"},
+		{"toolschema_err_invalid_branch", map[string]any{"Branch": "b"}, "invalid branch: b"},
 	}
 	for _, c := range cases {
 		got := tr.T(c.id, c.data)
@@ -237,5 +257,108 @@ func TestI18n_TestHandler_DescriptionUsesSeam(t *testing.T) {
 	desc, _ := args["description"].(string)
 	if !strings.Contains(desc, "toolschema_test_desc_unit") {
 		t.Fatalf("test description must carry the seam-resolved string; got %q", desc)
+	}
+}
+
+// TestI18n_Round371_DescriptionsUseSeam is a PAIRED-MUTATION test for
+// the round-371 GenerateDefaultArgs description migrations. Reverting
+// any description to a hardcoded literal drops the recorded ID and
+// fails the matching subtest — CONST-046 regression detector.
+func TestI18n_Round371_DescriptionsUseSeam(t *testing.T) {
+	cases := []struct {
+		name    string
+		gen     func() map[string]interface{}
+		wantID  string
+	}{
+		{"read_file", func() map[string]interface{} { return (&ReadFileHandler{}).GenerateDefaultArgs("read it") }, "toolschema_desc_read_file"},
+		{"git_diff", func() map[string]interface{} { return (&DiffHandler{}).GenerateDefaultArgs("show diff") }, "toolschema_desc_git_diff"},
+		{"tree_view", func() map[string]interface{} { return (&TreeViewHandler{}).GenerateDefaultArgs("show tree") }, "toolschema_desc_tree_view"},
+		{"file_info", func() map[string]interface{} { return (&FileInfoHandler{}).GenerateDefaultArgs("file info") }, "toolschema_desc_file_info"},
+		{"symbols", func() map[string]interface{} { return (&SymbolsHandler{}).GenerateDefaultArgs("extract symbols") }, "toolschema_desc_extract_symbols"},
+		{"references", func() map[string]interface{} { return (&ReferencesHandler{}).GenerateDefaultArgs("find refs") }, "toolschema_desc_find_references"},
+		{"definition", func() map[string]interface{} { return (&DefinitionHandler{}).GenerateDefaultArgs("find definition") }, "toolschema_desc_find_definition"},
+		{"issue_list", func() map[string]interface{} { return (&IssueHandler{}).GenerateDefaultArgs("list issues") }, "toolschema_desc_list_issues"},
+		{"workflow_list", func() map[string]interface{} { return (&WorkflowHandler{}).GenerateDefaultArgs("list workflows") }, "toolschema_desc_list_workflows"},
+		{"pr_list", func() map[string]interface{} { return (&PRHandler{}).GenerateDefaultArgs("list prs") }, "toolschema_pr_desc_list"},
+		{"pr_create", func() map[string]interface{} { return (&PRHandler{}).GenerateDefaultArgs("create a pr") }, "toolschema_pr_desc_create"},
+		{"pr_merge", func() map[string]interface{} { return (&PRHandler{}).GenerateDefaultArgs("merge the pr") }, "toolschema_pr_desc_merge"},
+		{"pr_view", func() map[string]interface{} { return (&PRHandler{}).GenerateDefaultArgs("view the pr") }, "toolschema_pr_desc_view"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			rec := newRecordingTranslator()
+			SetTranslator(rec)
+			defer SetTranslator(nil)
+
+			args := c.gen()
+			if _, ok := rec.calls[c.wantID]; !ok {
+				t.Fatalf("%s description did not route through the i18n seam — CONST-046 regression", c.name)
+			}
+			desc, _ := args["description"].(string)
+			if !strings.Contains(desc, c.wantID) {
+				t.Fatalf("%s description must carry the seam-resolved string; got %q", c.name, desc)
+			}
+		})
+	}
+}
+
+// TestI18n_Round371_ErrorsUseSeam is a PAIRED-MUTATION test for the
+// round-371 PR / Issue / Workflow handler error migrations. Each
+// subtest drives a handler into a rejection path and asserts the
+// error string routed through the i18n seam.
+func TestI18n_Round371_ErrorsUseSeam(t *testing.T) {
+	cases := []struct {
+		name   string
+		exec   func() ToolResult
+		wantID string
+	}{
+		{
+			name:   "pr_unknown_action",
+			exec:   func() ToolResult { r, _ := (&PRHandler{}).Execute(context.Background(), map[string]interface{}{"action": "frobnicate"}); return r },
+			wantID: "toolschema_err_unknown_action",
+		},
+		{
+			name:   "pr_dangerous_title",
+			exec:   func() ToolResult { r, _ := (&PRHandler{}).Execute(context.Background(), map[string]interface{}{"action": "create", "title": "x; rm -rf /"}); return r },
+			wantID: "toolschema_err_dangerous_title",
+		},
+		{
+			name:   "pr_dangerous_body",
+			exec:   func() ToolResult { r, _ := (&PRHandler{}).Execute(context.Background(), map[string]interface{}{"action": "create", "body": "y && curl evil"}); return r },
+			wantID: "toolschema_err_dangerous_body",
+		},
+		{
+			name:   "pr_invalid_base_branch",
+			exec:   func() ToolResult { r, _ := (&PRHandler{}).Execute(context.Background(), map[string]interface{}{"action": "create", "base_branch": "bad;branch"}); return r },
+			wantID: "toolschema_err_invalid_base_branch",
+		},
+		{
+			name:   "workflow_dangerous_id",
+			exec:   func() ToolResult { r, _ := (&WorkflowHandler{}).Execute(context.Background(), map[string]interface{}{"action": "run", "workflow_id": "w; rm"}); return r },
+			wantID: "toolschema_err_dangerous_workflow_id",
+		},
+		{
+			name:   "workflow_invalid_branch",
+			exec:   func() ToolResult { r, _ := (&WorkflowHandler{}).Execute(context.Background(), map[string]interface{}{"action": "run", "workflow_id": "ci.yml", "branch": "bad;branch"}); return r },
+			wantID: "toolschema_err_invalid_branch",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			rec := newRecordingTranslator()
+			SetTranslator(rec)
+			defer SetTranslator(nil)
+
+			res := c.exec()
+			if res.Success {
+				t.Fatalf("%s: expected a rejection result", c.name)
+			}
+			if _, ok := rec.calls[c.wantID]; !ok {
+				t.Fatalf("%s error did not route through the i18n seam — CONST-046 regression", c.name)
+			}
+			if !strings.Contains(res.Error, c.wantID) {
+				t.Fatalf("%s: ToolResult.Error must carry the seam-resolved string; got %q", c.name, res.Error)
+			}
+		})
 	}
 }
