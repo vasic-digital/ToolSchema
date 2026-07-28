@@ -5,13 +5,18 @@
 // recently helix_code/internal/approval/i18n, round-221).
 //
 // ToolSchema is a fully decoupled, project-not-aware submodule
-// (CONST-051(B)): it declares only the Translator contract + a
-// loud-echo NoopTranslator fallback. The consuming binary builds a
-// real Translator (e.g. a go-i18n-backed adapter loaded with the
-// bundles under i18n/bundles) and injects it via SetTranslator at
-// boot. Until wired, the package-level tr() helper falls back to
-// NoopTranslator{} — a loud message-ID echo, never a silent swallow
-// (which would be a §11.4 PASS-bluff at the i18n layer).
+// (CONST-051(B)): it declares only the Translator contract. A
+// consuming binary MAY build its own real Translator (e.g. a
+// go-i18n-backed adapter supporting additional locales) and inject it
+// via SetTranslator at boot to override the package default. Until a
+// consumer does so, the package-level tr() helper resolves against
+// defaultTranslator() (i18n_bundle.go) — the canonical English bundle
+// compiled into the binary via go:embed — so every consumer gets
+// correct, real text out of the box with zero wiring, regardless of
+// the caller's working directory, deployment layout, or packaging.
+// A message ID absent from the bundle still echoes loudly (never a
+// silent swallow, which would be a §11.4 PASS-bluff at the i18n
+// layer).
 package tools
 
 import "sync"
@@ -27,27 +32,33 @@ type Translator interface {
 	T(messageID string, templateData map[string]any) string
 }
 
-// NoopTranslator returns the messageID verbatim. SAFETY default for
-// unit tests + backward compatibility for callers who have not yet
-// wired a real Translator. Production paths SHOULD inject a real
-// Translator via SetTranslator at boot.
+// NoopTranslator returns the messageID verbatim (loud ID echo). It is
+// an explicit OPT-IN translator for callers (typically unit tests)
+// that want to assert on the raw message ID rather than resolved
+// text — it is NOT the package default (see defaultTranslator() in
+// i18n_bundle.go for that). Never panics.
 type NoopTranslator struct{}
 
 // T returns id unchanged (loud echo). Never panics.
 func (NoopTranslator) T(id string, _ map[string]any) string { return id }
 
 var (
-	trMu         sync.RWMutex
-	activeTr     Translator = NoopTranslator{}
+	trMu     sync.RWMutex
+	activeTr Translator = defaultTranslator()
 )
 
 // SetTranslator installs the active Translator. Passing nil restores
-// the loud-echo NoopTranslator. Safe for concurrent use.
+// the package default — the embedded-bundle Translator returned by
+// defaultTranslator(), which resolves real text with zero wiring and
+// zero dependency on the caller's working directory. Callers that
+// specifically want raw message-ID echoes (e.g. to assert a callsite
+// routes through the i18n seam at all) should pass NoopTranslator{}
+// explicitly rather than relying on nil. Safe for concurrent use.
 func SetTranslator(t Translator) {
 	trMu.Lock()
 	defer trMu.Unlock()
 	if t == nil {
-		activeTr = NoopTranslator{}
+		activeTr = defaultTranslator()
 		return
 	}
 	activeTr = t

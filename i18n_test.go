@@ -161,16 +161,35 @@ func toStr(v any) string {
 	return ""
 }
 
-// TestI18n_NoopTranslator_EchoesID verifies the loud-echo fallback:
-// an unwired package returns the message ID verbatim, never an empty
-// string (a silent swallow would be a §11.4 PASS-bluff).
+// TestI18n_NoopTranslator_EchoesID verifies NoopTranslator's loud-echo
+// contract: an explicitly-wired NoopTranslator returns the message ID
+// verbatim, never an empty string (a silent swallow would be a §11.4
+// PASS-bluff). NoopTranslator is opt-in (see i18n.go) — it is no
+// longer what SetTranslator(nil) restores to, so it is wired
+// explicitly here rather than via nil.
 func TestI18n_NoopTranslator_EchoesID(t *testing.T) {
-	SetTranslator(nil) // restore Noop default
+	SetTranslator(NoopTranslator{})
 	defer SetTranslator(nil)
 
 	got := tr("toolschema_err_unknown_tool", map[string]any{"Tool": "Frob"})
 	if got != "toolschema_err_unknown_tool" {
 		t.Fatalf("NoopTranslator must echo the message ID; got %q", got)
+	}
+}
+
+// TestI18n_DefaultTranslator_UnknownID_EchoesLoud proves the PACKAGE
+// DEFAULT (what SetTranslator(nil) restores to since the go:embed
+// fix — see i18n_bundle.go) preserves the same never-silent-swallow
+// guarantee for a message ID that genuinely does not exist in the
+// bundle: it must echo the raw ID, never return an empty string.
+func TestI18n_DefaultTranslator_UnknownID_EchoesLoud(t *testing.T) {
+	SetTranslator(nil) // restore package default (embedded bundle translator)
+	defer SetTranslator(nil)
+
+	const unknownID = "toolschema_this_id_does_not_exist_in_any_bundle"
+	got := tr(unknownID, nil)
+	if got != unknownID {
+		t.Fatalf("default translator must echo an unknown message ID loudly, never silently swallow it; got %q, want %q", got, unknownID)
 	}
 }
 
